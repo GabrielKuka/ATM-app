@@ -16,11 +16,12 @@ def withdraw(request, id):
         return Response({"Example": example})
 
     try:
-
-        valid_input = str(request.data['amount']).isdigit() and int(request.data['amount'])>=500
+        valid_input = 'amount' in request.data and\
+                str(request.data['amount']).isdigit() and\
+                int(request.data['amount'])>=500
         
         if not valid_input: 
-            raise ValueError("Invalid amount value.")
+            raise ValueError("Invalid input.")
 
         initial_amount = amount = int(request.data['amount']) 
 
@@ -95,10 +96,11 @@ def add_cash(request, id):
     try:
         data=request.data
 
+        valid_notes = ('500', '1000', '2000', '5000')
         for x in data.items():
-            not_valid = not str(x[1]).isdigit() or int(x[1]) <= 0
+            not_valid = x[0] not in valid_notes or not str(x[1]).isdigit() or int(x[1]) <= 0
             if not_valid:
-                raise ValueError("'{0}': {1} => Invalid cash value. The number must be > 0.".format(x[0], x[1]))
+                raise ValueError("'{0}': {1} => Invalid input.".format(x[0], x[1]))
 
         atm = ATM.objects.get(id=id) 
 
