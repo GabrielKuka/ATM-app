@@ -8,7 +8,7 @@ from .models import ATM, Withdrawal
 
 
 @api_view(['POST', 'GET'])
-def withdraw(request):
+def withdraw(request, id):
 
     if request.method == "GET":
         example = { "amount": 28500, "atm_id": 1 }
@@ -26,8 +26,7 @@ def withdraw(request):
         if amount % 500 != 0:
             raise ValueError("Amount needs to be multiple of 500.") 
 
-        atm_id = int(request.data['atm_id'])
-        atm = ATM.objects.get(id=atm_id)
+        atm = ATM.objects.get(id=id)
 
         bank_notes = {
             '5000': atm.sasi_5000,
@@ -66,7 +65,7 @@ def withdraw(request):
 
         # Create withdrawal
         w = Withdrawal.objects.create(approved=True if valid_withdrawal else False, 
-            amount=initial_amount, atm=ATM(id=atm_id), 
+            amount=initial_amount, atm=ATM(id=id), 
             note_5000=result.get('5000', 0),
             note_2000=result.get('2000', 0),
             note_1000=result.get('1000', 0),
@@ -84,7 +83,7 @@ def withdraw(request):
         return Response(f"Error: This atm does not exist.")
 
 @api_view(['PUT', 'GET'])
-def add_cash(request):
+def add_cash(request, id):
 
     if request.method == 'GET':
         example = { "atm_id":1, "5000": 10, "2000": 19 }
@@ -93,7 +92,7 @@ def add_cash(request):
     try:
         data=request.data
 
-        atm = ATM.objects.get(id=data["atm_id"]) 
+        atm = ATM.objects.get(id=id) 
 
         # Add cash
         input = {
