@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from .serializers import AtmSerializer, WithdrawalSerializer
 from .models import ATM, Withdrawal
@@ -78,9 +79,11 @@ def withdraw(request, id):
 
         return Response(serializer.data)
     except ValueError as e:
-        return Response(f"Error: {e}")
+        return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist as e:
-        return Response(f"Error: This atm does not exist.")
+        return Response(f"Error: This atm does not exist.", status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT', 'GET'])
 def add_cash(request, id):
@@ -116,11 +119,11 @@ def add_cash(request, id):
         return Response(serializer.data)
 
     except ValueError as e:
-        return Response(f"Error: {e}")
+        return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
-        return Response("Error: This ATM does not exist.")
+        return Response("Error: This ATM does not exist.", status=status.HTTP_404_NOT_FOUND)
     except Exception as err:
-        return Response(f"Error: {err}")
+        return Response(f"Error: {err}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_atms(request):
@@ -129,7 +132,7 @@ def get_atms(request):
         serializer = AtmSerializer(atms, many=True)
         return Response(serializer.data)
     except Exception as e:
-        return Response(f"Error: {e}")
+        return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_atm(request, id):
@@ -139,9 +142,9 @@ def get_atm(request, id):
         return Response(serializer.data)
 
     except ObjectDoesNotExist:
-        return Response('Error: Atm not found')
+        return Response('Error: Atm not found', status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(f"Error: {e}")
+        return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_all_withdrawals(request):
@@ -150,14 +153,13 @@ def get_all_withdrawals(request):
         serializer = WithdrawalSerializer(ws, many=True)
         return Response(serializer.data)
     except Exception as e:
-        return Response(f'Error: {e}')
+        return Response(f'Error: {e}', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_poor_atms(request):
-
     try:
         atms = [atm for atm in ATM.objects.all() if atm.budget <=5000] 
         serializer = AtmSerializer(atms, many=True)
         return Response(serializer.data)
     except Exception as e:
-        return Response(f"Error: {e}")
+        return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
