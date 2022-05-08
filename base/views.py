@@ -92,6 +92,11 @@ def add_cash(request, id):
     try:
         data=request.data
 
+        for x in data.items():
+            not_valid = not str(x[1]).isdigit() or int(x[1]) <= 0
+            if not_valid:
+                raise ValueError("'{0}': {1} => Invalid cash value. The number must be > 0.".format(x[0], x[1]))
+
         atm = ATM.objects.get(id=id) 
 
         # Add cash
@@ -110,10 +115,10 @@ def add_cash(request, id):
         serializer.save()
         return Response(serializer.data)
 
-    except ObjectDoesNotExist:
-        return Response("Error: This ATM does not exist.")
     except ValueError as e:
         return Response(f"Error: {e}")
+    except ObjectDoesNotExist:
+        return Response("Error: This ATM does not exist.")
     except Exception as err:
         return Response(f"Error: {err}")
 
