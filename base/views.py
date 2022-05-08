@@ -7,8 +7,13 @@ from .serializers import AtmSerializer, WithdrawalSerializer
 from .models import ATM, Withdrawal
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def withdraw(request):
+
+    if request.method == "GET":
+        example = { "amount": 28500, "atm_id": 1 }
+        return Response({"Example": example})
+
     try:
 
         valid_input = str(request.data['amount']).isdigit() and int(request.data['amount'])>=500
@@ -78,8 +83,13 @@ def withdraw(request):
     except ObjectDoesNotExist as e:
         return Response(f"Error: This atm does not exist.")
 
-@api_view(['PUT'])
+@api_view(['PUT', 'GET'])
 def add_cash(request):
+
+    if request.method == 'GET':
+        example = { "atm_id":1, "5000": 10, "2000": 19 }
+        return Response({'Example': example})
+
     try:
         data=request.data
 
@@ -147,14 +157,3 @@ def get_poor_atms(request):
         return Response(serializer.data)
     except Exception as e:
         return Response(f"Error: {e}")
-
-@api_view(['GET'])
-def test(request):
-    from django.db.models import Avg, Sum
-    from datetime import datetime, timedelta
-    last_month = datetime.today() - timedelta(days=30)
-
-    avg = Withdrawal.objects.filter(date__gte=last_month).order_by('-date__day') \
-        .values('date__day').annotate(total_sum=Sum('note_5000')).aggregate(avg=Avg('total_sum'))
-
-    return Response(avg)
