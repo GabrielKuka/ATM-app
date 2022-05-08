@@ -11,7 +11,7 @@ from .models import ATM, Withdrawal
 def withdraw(request, id):
 
     if request.method == "GET":
-        example = { "amount": 28500, "atm_id": 1 }
+        example = { "amount": 28500 }
         return Response({"Example": example})
 
     try:
@@ -86,7 +86,7 @@ def withdraw(request, id):
 def add_cash(request, id):
 
     if request.method == 'GET':
-        example = { "atm_id":1, "5000": 10, "2000": 19 }
+        example = { "5000": 10, "2000": 19 }
         return Response({'Example': example})
 
     try:
