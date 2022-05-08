@@ -39,8 +39,9 @@ class ATM(models.Model):
     
         last_month = datetime.today() - timedelta(days=30)
 
-        avg = Withdrawal.objects.filter(date__gte=last_month).order_by('-date__day') \
-            .values('date__day').annotate(total_sum=Sum(type)).aggregate(avg=Avg('total_sum'))
+        avg = Withdrawal.objects.filter(date__gte=last_month, atm=self.id) \
+                .order_by('-date__day').values('date__day')\
+                .annotate(total_sum=Sum(type)).aggregate(avg=Avg('total_sum'))
 
         return avg['avg'] if avg['avg'] != None else 0.0
 
