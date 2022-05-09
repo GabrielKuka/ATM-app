@@ -7,6 +7,9 @@ from rest_framework import status
 from .serializers import AtmSerializer, WithdrawalSerializer
 from .models import ATM, Withdrawal
 
+import sys
+
+MAX_INT = sys.maxsize
 
 @api_view(['GET', 'POST'])
 def add_atm(request):
@@ -70,14 +73,14 @@ def withdraw(request, id):
         atm = ATM.objects.get(id=id)
 
         bank_notes = {
-            '5000': atm.sasi_5000,
-            '2000': atm.sasi_2000,
-            '1000': atm.sasi_1000,
-            '500': atm.sasi_500
+            '5000': atm.sasi_5000 if atm.budget >= amount else MAX_INT,
+            '2000': atm.sasi_2000 if atm.budget >= amount else MAX_INT,
+            '1000': atm.sasi_1000 if atm.budget >= amount else MAX_INT,
+            '500': atm.sasi_500 if atm.budget >= amount else MAX_INT,
         }    
 
         result = {}
-
+             
         for el in bank_notes.items():
             note = int(el[0]) 
             note_freq = int(el[1])
