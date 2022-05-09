@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import ATM, Withdrawal
 
+from users.serializers import UserSerializer 
+
 class AtmSerializer(serializers.ModelSerializer):
     budget = serializers.ReadOnlyField()
     mesatarja = serializers.ReadOnlyField()
@@ -12,9 +14,9 @@ class AtmSerializer(serializers.ModelSerializer):
     class Meta:
         model = ATM
         fields = '__all__'
-    
 
 class WithdrawalSerializer(serializers.ModelSerializer):
+    client =  UserSerializer()
     class Meta:
         model = Withdrawal 
         fields = '__all__'

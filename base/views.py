@@ -1,7 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
 
-from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from .serializers import AtmSerializer, WithdrawalSerializer
@@ -12,6 +14,7 @@ import sys
 MAX_INT = sys.maxsize
 
 @api_view(['GET', 'POST'])
+@permission_classes((AllowAny,))
 def add_atm(request):
 
     if request.method == 'GET':
@@ -49,15 +52,15 @@ def add_atm(request):
     except Exception as e:
         return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
+@permission_classes((IsAuthenticated, ))
 def withdraw(request, id):
 
-    if request.method == "GET":
-        example = { "amount": 28500 }
-        return Response({"Example": example})
-
     try:
+        # Retrieve user id from token
+        token = request.headers['Authorization']
+        user = Token.objects.get(key=token).user_id
+
         valid_input = 'amount' in request.data and\
                 str(request.data['amount']).isdigit() and\
                 int(request.data['amount'])>=500
@@ -114,6 +117,7 @@ def withdraw(request, id):
             note_2000=result.get('2000', 0),
             note_1000=result.get('1000', 0),
             note_500=result.get('500', 0),
+            client=user
             )
 
         w.save()
@@ -124,7 +128,7 @@ def withdraw(request, id):
     except ValueError as e:
         return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist as e:
-        return Response(f"Error: This atm does not exist.", status=status.HTTP_404_NOT_FOUND)
+        return Response(f"Error: {e}", status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -136,6 +140,7 @@ def add_cash(request, id):
         return Response({'Example': example})
 
     try:
+
         data=request.data
 
         valid_notes = ('500', '1000', '2000', '5000')
@@ -179,6 +184,7 @@ def get_atms(request):
         return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes((AllowAny,))
 def get_atm(request, id):
     try:
         atm = ATM.objects.get(id=id)

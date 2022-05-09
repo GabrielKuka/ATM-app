@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Avg, Sum
 from datetime import datetime, timedelta
-
+from django.conf import settings
 
 class ATM(models.Model):
     sasi_500 = models.IntegerField(default=0)
@@ -50,7 +50,6 @@ class ATM(models.Model):
                 sasi_5000: {self.sasi_5000}\nsasi_2000: {self.sasi_2000}\n \
                 sasi_1000: {self.sasi_1000}\nsasi_500: {self.sasi_500}"
 
-
 class Withdrawal(models.Model):
     approved = models.BooleanField(default=False)
     amount = models.IntegerField(default=500)
@@ -59,9 +58,11 @@ class Withdrawal(models.Model):
     note_1000 = models.IntegerField(default=0)
     note_500 = models.IntegerField(default=0)
     date = models.DateTimeField(auto_now_add=True)
-    atm = models.ForeignKey(ATM, on_delete=models.CASCADE)
+    atm = models.ForeignKey(ATM, related_name='atm', on_delete=models.CASCADE)
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='client', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Date: {self.date}\nApproved: {self.approved}\nAmount: {self.amount}\nAtm: {self.atm.id}\n \
                 Note_5000: {self.note_5000}\nNote_2000: {self.note_2000}\n \
-                Note_1000: {self.note_1000}\nNote_500: {self.note_500}"
+                Note_1000: {self.note_1000}\nNote_500: {self.note_500}\n \
+                User: {self.client}" 
