@@ -8,6 +8,45 @@ from .serializers import AtmSerializer, WithdrawalSerializer
 from .models import ATM, Withdrawal
 
 
+@api_view(['GET', 'POST'])
+def add_atm(request):
+
+    if request.method == 'GET':
+        example = {'5000': 25}
+        return Response({'Example': example}) 
+    
+    try:
+        data = request.data
+        atm = ATM.objects.create()
+
+        valid_notes = ('5000', '2000', '1000', '500')
+        for x in data.items():
+            not_valid = x[0] not in valid_notes or not str(x[1]).isdigit() or int(x[1]) <= 0
+            if not_valid:
+                raise ValueError("'{0}': {1} => Invalid input.".format(x[0], x[1]))
+
+        # Add cash
+        input = {
+            "sasi_5000": atm.sasi_5000 + data.get('5000', 0), 
+            "sasi_2000": atm.sasi_2000 + data.get('2000', 0), 
+            "sasi_1000": atm.sasi_1000 + data.get('1000', 0), 
+            "sasi_500": atm.sasi_500 + data.get('500', 0), 
+        }
+
+        serializer = AtmSerializer(instance=atm, data=input)
+
+        if not serializer.is_valid():
+            raise ValueError("Invalid data entered.")
+        
+        serializer.save()
+        return Response(serializer.data)
+
+    except ValueError as e:
+        return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST', 'GET'])
 def withdraw(request, id):
 

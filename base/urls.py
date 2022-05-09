@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.get_atms),
+    path('add_atm', views.add_atm),
     path('<int:id>/', views.get_atm),
     path('<int:id>/withdraw/', views.withdraw),
     path('<int:id>/add_cash/', views.add_cash),
