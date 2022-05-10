@@ -59,8 +59,13 @@ def add_atm(request):
     except Exception as e:
         return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def withdraw(request, id):
+
+    if request.method == 'GET':
+        example = {"amount": 28500, "name": "Gabriel (The username)", "pin": 1998}
+        return Response(example)
+
     try:
 
         valid_input = 'amount' in request.data and \

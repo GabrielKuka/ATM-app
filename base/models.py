@@ -38,6 +38,7 @@ class ATM(models.Model):
     
         last_month = datetime.today() - timedelta(days=30)
 
+        # Get the data from the last 30 days, group by day, sum the data, get the avg of the sums 
         avg = Withdrawal.objects.filter(date__gte=last_month, atm=self.id) \
                 .order_by('-date__day').values('date__day')\
                 .annotate(total_sum=Sum(type)).aggregate(avg=Avg('total_sum'))
