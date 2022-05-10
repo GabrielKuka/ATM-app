@@ -57,6 +57,18 @@ class Client(models.Model):
     def __str__(self):
         return f"Name: {self.name}\nPin: {self.pin}"
 
+class Refill(models.Model):
+    sasi_500 = models.IntegerField(default=0)
+    sasi_1000 = models.IntegerField(default=0)
+    sasi_2000 = models.IntegerField(default=0)
+    sasi_5000 = models.IntegerField(default=0)
+    date = models.DateTimeField(auto_now_add=True)
+    atm = models.ForeignKey(ATM, on_delete=models.CASCADE)
+
+    @property
+    def amount(self):
+        return (self.sasi_500*500)+(self.sasi_1000*1000)+(self.sasi_2000*2000)+(self.sasi_5000*5000)
+
 class Withdrawal(models.Model):
     approved = models.BooleanField(default=False)
     amount = models.IntegerField(default=500)

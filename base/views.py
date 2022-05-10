@@ -4,11 +4,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-from .serializers import AtmSerializer, WithdrawalSerializer, ClientSerializer
-from .models import ATM, Withdrawal, Client
+from .serializers import AtmSerializer, WithdrawalSerializer, RefillSerializer
+from .models import ATM, Refill, Withdrawal, Client
 
 import sys
-
 MAX_INT = sys.maxsize
 
 @api_view(['GET', 'POST'])
@@ -30,19 +29,30 @@ def add_atm(request):
 
         # Add cash
         input = {
-            "sasi_5000": atm.sasi_5000 + data.get('5000', 0), 
-            "sasi_2000": atm.sasi_2000 + data.get('2000', 0), 
-            "sasi_1000": atm.sasi_1000 + data.get('1000', 0), 
-            "sasi_500": atm.sasi_500 + data.get('500', 0), 
+            "sasi_5000": data.get('5000', 0), 
+            "sasi_2000": data.get('2000', 0), 
+            "sasi_1000": data.get('1000', 0), 
+            "sasi_500": data.get('500', 0), 
         }
 
         serializer = AtmSerializer(instance=atm, data=input)
 
         if not serializer.is_valid():
-            raise ValueError("Invalid data entered.")
-        
+            raise Exception("Unkown Error Occurred")
+
         serializer.save()
-        return Response(serializer.data)
+        refill = Refill.objects.create(
+            atm=atm,
+            sasi_5000= data.get('5000', 0),
+            sasi_2000= data.get('2000', 0),
+            sasi_1000= data.get('1000', 0),
+            sasi_500= data.get('500', 0),
+        )
+
+        refill.save()
+        refill_serializer = RefillSerializer(refill)
+        
+        return Response(refill_serializer.data)
 
     except ValueError as e:
         return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
@@ -153,20 +163,39 @@ def add_cash(request, id):
         atm = ATM.objects.get(id=id) 
 
         # Add cash
-        input = {
+        atm_input = {
             "sasi_5000": atm.sasi_5000 + data.get('5000', 0), 
             "sasi_2000": atm.sasi_2000 + data.get('2000', 0), 
             "sasi_1000": atm.sasi_1000 + data.get('1000', 0), 
             "sasi_500": atm.sasi_500 + data.get('500', 0), 
         }
 
-        serializer = AtmSerializer(instance=atm, data=input)
+        refill_input = {
+            "sasi_5000": data.get('5000', 0), 
+            "sasi_2000": data.get('2000', 0), 
+            "sasi_1000": data.get('1000', 0), 
+            "sasi_500": data.get('500', 0), 
+        }
 
-        if not serializer.is_valid():
-            raise ValueError("Invalid data entered.")
+        atm_serializer = AtmSerializer(instance=atm, data=atm_input)
+
+        if atm_serializer.is_valid():
+            atm_serializer.save()
+
+        refill = Refill.objects.create(
+            atm=atm,
+            sasi_500= data.get('500', 0),
+            sasi_1000= data.get('1000', 0),
+            sasi_2000= data.get('2000', 0),
+            sasi_5000= data.get('5000', 0),
+            )
+
+        refill.save()
+
+        refill_serializer = RefillSerializer(refill)
+
+        return Response(refill_serializer.data) 
         
-        serializer.save()
-        return Response(serializer.data)
 
     except ValueError as e:
         return Response(f"Error: {e}", status=status.HTTP_400_BAD_REQUEST)
@@ -174,6 +203,16 @@ def add_cash(request, id):
         return Response("Error: This ATM does not exist.", status=status.HTTP_404_NOT_FOUND)
     except Exception as err:
         return Response(f"Error: {err}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_refills(request, id):
+
+    try:
+        refills = Refill.objects.filter(atm=ATM.objects.get(id=id))
+        serializer = RefillSerializer(refills, many=True)
+        return Response(serializer.data)
+    except ObjectDoesNotExist:
+        return Response("This atm does not exist")
 
 @api_view(['GET'])
 def get_atms(request):

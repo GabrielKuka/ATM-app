@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ATM, Withdrawal, Client
+from .models import ATM, Withdrawal, Client, Refill 
 
 class AtmSerializer(serializers.ModelSerializer):
     budget = serializers.ReadOnlyField()
@@ -11,6 +11,12 @@ class AtmSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ATM
+        fields = '__all__'
+
+class RefillSerializer(serializers.ModelSerializer):
+    amount = serializers.ReadOnlyField()
+    class Meta:
+        model = Refill 
         fields = '__all__'
 
 class ClientSerializer(serializers.ModelSerializer):
