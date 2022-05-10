@@ -49,14 +49,10 @@ def add_atm(request):
     except Exception as e:
         return Response(f"Error: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 def withdraw(request, id):
-
-    if request.method == 'GET':
-        example = {'amount': 28500, 'name': 'Gabriel', 'pin': 1998}
-        return Response(example)
-
     try:
+
         valid_input = 'amount' in request.data and \
                 'name' in request.data and \
                 'pin' in request.data and \
@@ -66,19 +62,17 @@ def withdraw(request, id):
         if not valid_input: 
             raise ValueError("Invalid input.")
 
+        initial_amount = amount = int(request.data['amount']) 
+
+        if amount % 500 != 0:
+            raise ValueError("Amount needs to be multiple of 500.") 
+
         data = request.data
 
         try:
             client = Client.objects.get(name=data['name'], pin=data['pin'])
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Auth data incorrrect.")
-
-        initial_amount = amount = int(data['amount']) 
-
-        if amount % 500 != 0:
-            raise ValueError("Amount needs to be multiple of 500.") 
-        if amount > client.max_val:
-            raise ValueError(f"You can't withdraw more than {client.max_val}")
 
         atm = ATM.objects.get(id=id)
 
@@ -143,44 +137,27 @@ def withdraw(request, id):
 def add_cash(request, id):
 
     if request.method == 'GET':
-        example = { "amount": 28500 }
+        example = { "5000": 10, "2000": 19 }
         return Response({'Example': example})
 
     try:
 
         data=request.data
 
-        valid_input = 'amount' in data and str(data['amount']).isdigit() 
-        if not valid_input:
-            raise ValueError("Invalid Input.")
-
-        amount = data['amount']
-
-        if amount % 500 != 0:
-            raise ValueError("Amount needs to be multiple of 500.")
+        valid_notes = ('500', '1000', '2000', '5000')
+        for x in data.items():
+            not_valid = x[0] not in valid_notes or not str(x[1]).isdigit() or int(x[1]) <= 0
+            if not_valid:
+                raise ValueError("'{0}': {1} => Invalid input.".format(x[0], x[1]))
 
         atm = ATM.objects.get(id=id) 
 
-
-        bank_notes = (5000, 2000, 1000, 500)
-
-        result = {}
-             
-        for note in bank_notes:
-        
-            if amount >= note :
-                notes_needed = amount // note
-
-                result[str(note)] = notes_needed
-
-                amount -= result[str(note)] * note
-
         # Add cash
         input = {
-            "sasi_5000": atm.sasi_5000 + result.get('5000', 0), 
-            "sasi_2000": atm.sasi_2000 + result.get('2000', 0), 
-            "sasi_1000": atm.sasi_1000 + result.get('1000', 0), 
-            "sasi_500": atm.sasi_500 + result.get('500', 0), 
+            "sasi_5000": atm.sasi_5000 + data.get('5000', 0), 
+            "sasi_2000": atm.sasi_2000 + data.get('2000', 0), 
+            "sasi_1000": atm.sasi_1000 + data.get('1000', 0), 
+            "sasi_500": atm.sasi_500 + data.get('500', 0), 
         }
 
         serializer = AtmSerializer(instance=atm, data=input)
